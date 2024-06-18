@@ -8,12 +8,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 function App() {
   const queryClient = useQueryClient();
   const [select, setSelect] = useState("all");
+  const [search, setSearch] = useState("");
   const { data, isLoading, error } = useQuery({
-    queryKey: [select],
+    queryKey: [select, search],
     queryFn: async () => {
       const url =
         select === "all"
-          ? "https://dummyjson.com/products"
+          ? "https://dummyjson.com/products/search?q=" + search
           : `https://dummyjson.com/products/category/${select}`;
       const req = await fetch(url);
       const res = await req.json();
@@ -30,10 +31,32 @@ function App() {
     },
   });
   console.log(data);
+
   return (
     <>
       <section>
-        <header>
+        <header className=" mb-5 flex  gap-5">
+          <label className="input input-bordered flex items-center gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              type="text"
+              className="grow"
+              placeholder="Search"
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="w-4 h-4 opacity-70"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </label>
           {categories && (
             <select
               value={select}
@@ -50,6 +73,12 @@ function App() {
           )}
         </header>
         <div className="grid grid-cols-3 gap-5">
+          {isLoading && (
+            <span
+              className="loading loading-spinner loading-lg"
+              style={{ zoom: "2" }}
+            ></span>
+          )}
           {data &&
             data.map(({ id, images, price, rating, title }, ind) => {
               return (
