@@ -1,24 +1,18 @@
 import { useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import { useStore } from "./store";
 import "./App.css";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 function App() {
-  const queryClient = useQueryClient();
   const [select, setSelect] = useState("all");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("");
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: [select, search, sortBy],
     queryFn: async () => {
       const url =
         select === "all"
-          ? "https://dummyjson.com/products/search?q=" +
-            search +
-            "&sortBy=" +
-            sortBy
+          ? `https://dummyjson.com/products/search?q=${search}&sortBy=${sortBy}`
           : `https://dummyjson.com/products/category/${select}?sortBy=${sortBy}`;
       const req = await fetch(url);
       const res = await req.json();
@@ -34,7 +28,6 @@ function App() {
       return res;
     },
   });
-  console.log(data);
 
   const { addToCart, cart, incrementCount, decrementCount } = useStore(
     (state) => state
@@ -44,10 +37,33 @@ function App() {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
+  // Dark mode state and toggle function
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedDarkMode = localStorage.getItem("darkMode");
+    return savedDarkMode ? JSON.parse(savedDarkMode) : false;
+  });
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem("darkMode", JSON.stringify(newDarkMode));
+    document.documentElement.setAttribute(
+      "data-theme",
+      newDarkMode ? "dark" : "light"
+    );
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-theme",
+      darkMode ? "dark" : "light"
+    );
+  }, [darkMode]);
+
   return (
-    <>
+    <div className="app">
       <section>
-        <header className=" mb-5 flex  gap-5">
+        <header className="mb-5 flex gap-5">
           <label className="input input-bordered flex items-center gap-2">
             <input
               value={search}
@@ -82,7 +98,7 @@ function App() {
               }}
             >
               <option value="all">Filter by Category</option>
-              {categories.map(({ slug, name, url }) => (
+              {categories.map(({ slug, name }) => (
                 <option key={slug} value={slug}>
                   {name}
                 </option>
@@ -92,7 +108,7 @@ function App() {
 
           <select
             value={sortBy}
-            className="select select-bordered w-full max-w-xs mb-4 text-white"
+            className="select select-bordered w-full max-w-xs mb-4"
             onChange={(e) => setSortBy(e.target.value)}
           >
             <option value="">Sort by</option>
@@ -134,7 +150,6 @@ function App() {
             >
               <div className="card-body">
                 <span className="font-bold text-lg">{cart.length} Items</span>
-
                 <div className="card-actions">
                   <button className="btn btn-primary btn-block">
                     View cart
@@ -143,6 +158,41 @@ function App() {
               </div>
             </div>
           </div>
+          <label className="flex  items-center cursor-pointer gap-2 mb-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+            </svg>
+            <input
+              type="checkbox"
+              className="toggle theme-controller"
+              checked={darkMode}
+              onChange={toggleDarkMode}
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          </label>
         </header>
         <div className="grid grid-cols-3 gap-5">
           {isLoading && (
@@ -152,69 +202,62 @@ function App() {
             ></span>
           )}
           {data &&
-            data.map(({ id, images, price, rating, title }, ind) => {
-              return (
-                <div
-                  key={id}
-                  className="card w-96 bg-base-100 shadow-md shadow-white "
-                >
-                  <figure>
-                    <img
-                      className="w-[320px] h-[320px] object-contain object-center"
-                      src={images[0]}
-                      alt="Shoes"
-                      width={320}
-                      height={320}
-                    />
-                  </figure>
-                  <div className="card-body">
-                    <h2 className="card-title">
-                      {title}
-                      <div className="badge badge-secondary">NEW</div>
-                    </h2>
-
-                    <div className="card-actions justify-end">
-                      <div className="badge badge-outline p-[8px]">
-                        Price - {price}$
-                      </div>
-                      <div className="badge badge-outline p-[8px]">
-                        Rating -{rating}⭐
-                      </div>
+            data.map(({ id, images, price, rating, title }) => (
+              <div key={id} className="card w-96 bg-base-100 shadow-md">
+                <figure>
+                  <img
+                    className="w-[320px] h-[320px] object-contain object-center"
+                    src={images[0]}
+                    alt="Shoes"
+                    width={320}
+                    height={320}
+                  />
+                </figure>
+                <div className="card-body">
+                  <h2 className="card-title">
+                    {title}
+                    <div className="badge badge-secondary">NEW</div>
+                  </h2>
+                  <div className="card-actions justify-end">
+                    <div className="badge badge-outline p-[8px]">
+                      Price - {price}$
+                    </div>
+                    <div className="badge badge-outline p-[8px]">
+                      Rating -{rating}⭐
                     </div>
                   </div>
-
-                  {cart.findIndex((item) => item.id === id) !== -1 ? (
-                    <div className="flex items-center justify-center gap-5">
-                      <button
-                        className="btn btn-sm btn-primary text-white font-bold"
-                        onClick={() => decrementCount(id)}
-                      >
-                        -
-                      </button>
-                      <p>
-                        {cart[cart.findIndex((item) => item.id === id)].count}
-                      </p>
-                      <button
-                        className="btn btn-sm btn-primary text-white font-bold"
-                        onClick={() => incrementCount(id)}
-                      >
-                        +
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => addToCart(id)}
-                    >
-                      Add to Cart
-                    </button>
-                  )}
                 </div>
-              );
-            })}
+                {cart.findIndex((item) => item.id === id) !== -1 ? (
+                  <div className="flex items-center justify-center gap-5">
+                    <button
+                      className="btn btn-sm btn-primary text-white font-bold"
+                      onClick={() => decrementCount(id)}
+                    >
+                      -
+                    </button>
+                    <p>
+                      {cart[cart.findIndex((item) => item.id === id)].count}
+                    </p>
+                    <button
+                      className="btn btn-sm btn-primary text-white font-bold"
+                      onClick={() => incrementCount(id)}
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => addToCart(id)}
+                  >
+                    Add to Cart
+                  </button>
+                )}
+              </div>
+            ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }
 
