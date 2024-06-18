@@ -195,12 +195,6 @@ function App() {
           </label>
         </header>
         <div className="grid grid-cols-3 gap-5">
-          {isLoading && (
-            <span
-              className="loading loading-spinner loading-lg"
-              style={{ zoom: "2" }}
-            ></span>
-          )}
           {data &&
             data.map(({ id, images, price, rating, title }) => (
               <div key={id} className="card w-96 bg-base-100 shadow-md">
@@ -255,6 +249,14 @@ function App() {
                 )}
               </div>
             ))}
+        </div>
+        <div className="flex items-center justify-center">
+          {isLoading && (
+            <span
+              className="  loading loading-spinner loading-lg "
+              style={{ zoom: "2" }}
+            ></span>
+          )}
         </div>
       </section>
     </div>
