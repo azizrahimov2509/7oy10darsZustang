@@ -9,13 +9,17 @@ function App() {
   const queryClient = useQueryClient();
   const [select, setSelect] = useState("all");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("");
   const { data, isLoading, error } = useQuery({
-    queryKey: [select, search],
+    queryKey: [select, search, sortBy],
     queryFn: async () => {
       const url =
         select === "all"
-          ? "https://dummyjson.com/products/search?q=" + search
-          : `https://dummyjson.com/products/category/${select}`;
+          ? "https://dummyjson.com/products/search?q=" +
+            search +
+            "&sortBy=" +
+            sortBy
+          : `https://dummyjson.com/products/category/${select}?sortBy=${sortBy}`;
       const req = await fetch(url);
       const res = await req.json();
       return res?.products;
@@ -39,7 +43,10 @@ function App() {
           <label className="input input-bordered flex items-center gap-2">
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setSelect("all");
+              }}
               type="text"
               className="grow"
               placeholder="Search"
@@ -61,7 +68,10 @@ function App() {
             <select
               value={select}
               className="select select-bordered w-full max-w-xs mb-4"
-              onChange={(e) => setSelect(e.target.value)}
+              onChange={(e) => {
+                setSelect(e.target.value);
+                setSearch("");
+              }}
             >
               <option value="all">Filter by Category</option>
               {categories.map(({ slug, name, url }) => (
@@ -71,6 +81,19 @@ function App() {
               ))}
             </select>
           )}
+
+          <select
+            value={sortBy}
+            className="select select-bordered w-full max-w-xs mb-4 text-white"
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="">Sort by</option>
+            {["title", "price", "rating"].map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
         </header>
         <div className="grid grid-cols-3 gap-5">
           {isLoading && (
